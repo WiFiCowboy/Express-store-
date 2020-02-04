@@ -1,10 +1,28 @@
 const express = require('express');
 const morgan = require('morgan');
+const uuid = require('uuid/v4');
 
 const app = express();
 
 app.use(morgan('dev'));
 app.use(express.json());
+
+const users = [
+	{
+		id: '3c8da4d5-1597-46e7-baa1-e402aed70d80',
+		username: 'sallyStudent',
+		password: 'c00d1ng1sc001',
+		favoriteClub: 'Cache Valley Stone Society',
+		newsLetter: 'true'
+	},
+	{
+		id: 'ce20079c-2326-4f17-8ac4-f617bfd28b7f',
+		username: 'johnBlocton',
+		password: 'veryg00dpasw0rd',
+		favoriteClub: 'Salt City Curling Club',
+		newsLetter: 'false'
+	}
+];
 
 app.post('/user', (req, res) => {
 	// get the data
@@ -51,8 +69,39 @@ app.post('/user', (req, res) => {
 		return res.status(400).send('Not a valid club');
 	}
 
+	const id = uuid();
+	const newUser = {
+		id,
+		username,
+		password,
+		favoriteClub,
+		newsLetter
+	};
+
+	users.push(newUser);
+	res.status(201).location(`http://localhost:8000/user/${id}`).json({ id: id });
+
 	// at this point all validation passed
 	res.send('All validation passed');
+});
+
+app.delete('/user/:userId', (req, res) => {
+	const { userId } = req.params;
+
+	const index = users.findIndex((u) => u.id === userId);
+
+	// make sure we actully find a user with that id
+	if (index === -1) {
+		return res.status(404).send('User not found');
+	}
+
+	users.splice(index, 1);
+
+	res.status(204).end();
+});
+
+app.get('/user', (req, res) => {
+	res.json(users);
 });
 
 module.exports = app;
